@@ -36,7 +36,7 @@ class GetStartedScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'Coin App',
+                        'Money App',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -123,41 +123,4 @@ class GetStartedScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-//Custom painter untuk grid background
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..strokeWidth = 0.5;
-
-    const int gridCount = 10;
-    final double stepX = size.width / gridCount;
-    final double stepY = size.height / gridCount;
-
-    //Draw vertical lines
-    for (int i = 0; i <= gridCount; i++) {
-      final double x = i * stepX;
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-
-    //Draw horizontal lines
-    for (int i = 0; i <= gridCount; i++) {
-      final double y = i * stepY;
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:money_clasification/getStartupScreen.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,41 +12,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  final ImagePicker _picker = ImagePicker();
+  File? _capturedImage;
 
-  //Data koin untuk ditampilkan(Article Section)
-  final List<Map<String, dynamic>> coins = [
-    {
-      'name': 'Komodo Coin',
-      'year': '1991 - 1998',
-      // 'image': 'assets/komodo_coin.png',
-      'value': 50,
-    },
-    {
-      'name': '100 Rupiah Coin',
-      'year': '1978',
-      // 'image': 'assets/100_rupiah.png',
-      'value': 100,
-    },
-    {
-      'name': 'Komodo Coin',
-      'year': '1991 - 1998',
-      // 'image': 'assets/komodo_coin.png',
-      'value': 50,
-    },
-    {
-      'name': '100 Rupiah Coin',
-      'year': '1978',
-      // 'image': 'assets/100_rupiah.png',
-      'value': 100,
-    },
-  ];
+  Future<void> _openCamera() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.rear,
+      imageQuality: 80,
+      );
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+      if (pickedFile != null) {
+        setState(() {
+          _capturedImage = File(pickedFile.path);
+        });
+      }    } catch (e) {
+      debugPrint('error camera: $e');
+
+    }
+  } 
+
 
   @override
   Widget build(BuildContext context) {
@@ -135,128 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              
-              //Section Article
-              Expanded(
-                flex: 6,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      //Header Article
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Article',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                              },
-                              child: const Text(
-                                'View All',
-                                style: TextStyle(
-                                  color: Color(0xFF4ECDC4),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      //Grid koin
-                      Expanded(
-                        child: GridView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                            childAspectRatio: 0.85,
-                          ),
-                          itemCount: coins.length,
-                          itemBuilder: (context, index) {
-                            final coin = coins[index];
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  //Gambar koin
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: coin['value'] == 50 
-                                          ? Colors.amber.shade300 
-                                          : Colors.grey.shade300,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Rp${coin['value']}',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: coin['value'] == 50
-                                              ? Colors.brown.shade700
-                                              : Colors.grey.shade700,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  //Nama koin
-                                  Text(
-                                    coin['name'],
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  // Tahun
-                                  Text(
-                                    coin['year'],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -279,17 +147,21 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 //Home button
                 IconButton(
-                  onPressed: () => _onItemTapped(0),
+                  tooltip: 'Beranda',
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GetStartedScreen()),
+                    );
+                  },
                   icon: Icon(
                     Icons.home,
-                    color: _selectedIndex == 0 
-                        ? const Color(0xFF4ECDC4) 
-                        : Colors.grey,
+                    color: Colors.grey,
                     size: 30,
                   ),
                 ),
                 
-                //QR Scanner button (tengah)
+                //Kamera button
                 Container(
                   width: 70,
                   height: 70,
@@ -302,25 +174,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   child: IconButton(
-                    onPressed: () {
-                      _onItemTapped(1);
-                    },
-                    icon: const Icon(
-                      Icons.qr_code_scanner,
-                      color: Color(0xFF4ECDC4),
-                      size: 32,
-                    ),
+                    tooltip: 'Ambil Gambar Uang',
+                    onPressed: _openCamera,
+                    icon: const Icon(Icons.camera_alt),
                   ),
                 ),
                 
                 //Library button
                 IconButton(
-                  onPressed: () => _onItemTapped(2),
+                  tooltip: 'Gallery Uang',
+                  onPressed: () {
+                  },
                   icon: Icon(
                     Icons.library_books,
-                    color: _selectedIndex == 2 
-                        ? const Color(0xFF4ECDC4) 
-                        : Colors.grey,
+                    color: Colors.grey,
                     size: 30,
                   ),
                 ),
