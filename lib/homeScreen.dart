@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:money_clasification/getStartupScreen.dart';
 import 'scanScreen.dart';
 import 'historyScreen.dart';
 import 'history_service.dart';
+import 'app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,182 +14,265 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _showDrawer = false;
+
+  void _handleNavigation(int index) async {
+    if (index == 0) {
+      // sudah di home, ke getstarted
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const GetStartedScreen()),
+      );
+    } else if (index == 1) {
+      // ke scan
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ScanScreen()),
+      );
+      
+      // jika ada hasil scan baru, tampilkan drawer
+      if (result == true && mounted) {
+        setState(() {
+          _showDrawer = true;
+        });
+        
+        // tutup drawer setelah beberapa detik
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              _showDrawer = false;
+            });
+          }
+        });
+      }
+    } else if (index == 2) {
+      // ke history
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+      );
+      // refresh untuk update drawer jika ada perubahan
+      if (mounted) setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bgGradient = const LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Color(0xFF17B3AA), Color(0xFF071427)],
-    );
-
-    final hasHistory = HistoryService.images.isNotEmpty;
+    final latestScan = HistoryService.latestScan;
+    final coinSize = ResponsiveHelper.coinSize(context);
+    final titleSize = ResponsiveHelper.titleSize(context);
+    final showArticle = _showDrawer && latestScan != null;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: bgGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header / hero
-              Expanded(
-                flex: hasHistory ? 7 : 10,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: Stack(
+        children: [
+          // gradient background
+          Container(
+            decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+          ),
+          
+          // konten utama
+          SafeArea(
+            child: Column(
+              children: [
+                // bagian hero layar penuh dengan koin
+                Expanded(
+                  child: Stack(
                     children: [
-                      // Two coin images across top
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _coinImage(),
-                          const SizedBox(width: 36),
-                          _coinImage(),
-                        ],
+                      // lingkaran dekoratif di background
+                      Positioned(
+                        top: -50,
+                        right: -50,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Scan Your\nMoney',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 48,
-                          height: 0.95,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Positioned(
+                        bottom: 100,
+                        left: -70,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                      ),
+                      
+                      // konten utama
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // hero image (WIP: bagusin nanti ya) 
+                            Container(
+                              width: coinSize,
+                              height: coinSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 30,
+                                    spreadRadius: 5,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/coin.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(height: ResponsiveHelper.isMobile(context) ? 32 : 40),
+                            
+                            // judul
+                            Text(
+                              'Scan Your',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: titleSize * 0.75,
+                                fontWeight: FontWeight.w300,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            Text(
+                              'Money',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 20),
+                            
+                            // subtitle
+                            Text(
+                              'Identifikasi Uang Anda via Scan',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withValues(alpha: 0.8),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
 
-              // Article/preview area (conditional drawer)
-              if (hasHistory)
-                Expanded(
-                  flex: 3,
-                  child: Container(
+                // area artikel/preview (drawer kondisional)
+                if (showArticle)
+                  Container(
+                    height: 280,
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: const BoxDecoration(
                       color: Color(0xFFF1F1F3),
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(28),
+                        topRight: Radius.circular(28),
+                      ),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // small header row
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text('Article', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            Text('View All', style: TextStyle(color: Colors.black45)),
+                          children: [
+                            const Text('Hasil Scan', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  _showDrawer = false;
+                                  HistoryService.clearLatestScan();
+                                });
+                              },
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        // simple placeholder grid (two items per row)
+                        const SizedBox(height: 16),
                         Expanded(
-                          child: GridView.count(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.9,
-                            children: List.generate(4, (index) => _articleCard()),
+                          child: SingleChildScrollView(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // gambar koin
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(latestScan.imagePath),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // detail prediksi
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        latestScan.coinName,
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Tahun: ${latestScan.year}',
+                                        style: const TextStyle(fontSize: 14, color: Colors.black54),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Akurasi: ${(latestScan.confidence * 100).toStringAsFixed(1)}%',
+                                        style: const TextStyle(fontSize: 14, color: AppColors.primary),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        latestScan.description,
+                                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-            ],
-          ),
-        ),
-      ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(color: Color(0xFF0A1628)),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // Home button
-                IconButton(
-                  tooltip: 'Beranda',
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GetStartedScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.home, color: Color(0xFF4ECDC4), size: 30),
-                ),
-
-                // Center scan button
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanScreen()));
-                  },
-                  child: Container(
-                    width: 78,
-                    height: 78,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF4ECDC4), width: 4),
-                    ),
-                    child: const Center(child: Icon(Icons.qr_code_scanner, color: Color(0xFF0A1628), size: 34)),
-                  ),
-                ),
-
-                // History button (was Gallery)
-                IconButton(
-                  tooltip: 'History',
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()));
-                  },
-                  icon: const Icon(Icons.history, color: Color(0xFF4ECDC4), size: 30),
-                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _coinImage() {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white24,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 10, spreadRadius: 2)],
-      ),
-      child: ClipOval(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/coin.png', fit: BoxFit.cover),
-        ),
-      ),
-    );
-  }
-
-  Widget _articleCard() {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Container(color: Colors.grey[200])),
-          ),
-          const SizedBox(height: 8),
-          const Align(alignment: Alignment.centerLeft, child: Text('100 Rupiah Coin', style: TextStyle(fontWeight: FontWeight.bold))),
-          const Align(alignment: Alignment.centerLeft, child: Text('1978', style: TextStyle(color: Colors.black45, fontSize: 12))),
         ],
       ),
+
+      // bottom navigation bar
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: 0,
+        onTap: _handleNavigation,
+      ),
     );
   }
+
+
 }

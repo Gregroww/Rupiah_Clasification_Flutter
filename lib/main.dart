@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'startupScreen.dart';
 import 'getStartupScreen.dart';
 
-
-
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -15,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Coin App',
+      title: 'Bingung nama app aokwoakwo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A)),
         useMaterial3: true,
