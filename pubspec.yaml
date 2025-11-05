@@ -38,6 +38,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   lottie: ^2.6.0
   image_picker: ^1.0.7
+  camera: ^0.10.0
+  path_provider: ^2.1.0
+  path: ^1.8.0
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +61,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/Lottie/Money.json
+    - assets/coin.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
