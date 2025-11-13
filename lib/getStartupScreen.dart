@@ -10,6 +10,7 @@ class GetStartedScreen extends StatelessWidget {
       body: Container(
         width: double.infinity,
         decoration: BoxDecoration(
+          //background gradient layar
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -22,7 +23,7 @@ class GetStartedScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              //Coin App Logo
+              //header kiri-atas: ikon + judul aplikasi
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Align(
@@ -36,7 +37,7 @@ class GetStartedScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'Money App',
+                        'Rupiah Scanner',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -48,13 +49,13 @@ class GetStartedScreen extends StatelessWidget {
                 ),
               ),
               
-              const Spacer(flex: 2),
+              const Spacer(flex: 2), //beri ruang agar konten utama turun ke tengah
               
-              //Teks "Start your project"
+              //judul/tagline utama
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.0),
                 child: Text(
-                  'Start your project',
+                  'Mulai dengan memindai koin rupiahmu',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 42,
@@ -66,11 +67,11 @@ class GetStartedScreen extends StatelessWidget {
               
               const SizedBox(height: 20),
               
-              // Lorem ipsum text
+              //teks tip singkat
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.0),
                 child: Text(
-                  'Lorem ipsum dolor sit amet consectetur.Isi apalah nanti Est vel cras gravida vestibulum feugiat purus auctor ultrices convallis.',
+                  'Tip: Pastikan uangmu berada di permukaan datar untuk hasil terbaik',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -80,9 +81,9 @@ class GetStartedScreen extends StatelessWidget {
                 ),
               ),
               
-              const Spacer(flex: 1),
+              const Spacer(flex: 1), //jarak sebelum tomboll
               
-              //Tombol Get Started
+              //tombol navigasi ke HomeScreen
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40.0),
                 child: SizedBox(
@@ -90,6 +91,7 @@ class GetStartedScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
+                      //ganti layar ke HomeScreen (replace agar tidak kembali ke get started)
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -98,15 +100,15 @@ class GetStartedScreen extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4ECDC4),
-                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF4ECDC4),//warna tombol
+                      foregroundColor: Colors.white,//warna teks/icon
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 0,
+                      elevation: 0, //flat look
                     ),
                     child: const Text(
-                      'Get Started',
+                      'Mulai Sekarang',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -116,7 +118,7 @@ class GetStartedScreen extends StatelessWidget {
                 ),
               ),
               
-              const SizedBox(height: 50),
+              const SizedBox(height: 50), //padding bawah
             ],
           ),
         ),
