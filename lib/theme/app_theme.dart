@@ -40,6 +40,7 @@ class ResponsiveHelper {
   static double screenWidth(BuildContext context) => MediaQuery.of(context).size.width;
   static double screenHeight(BuildContext context) => MediaQuery.of(context).size.height;
   
+  static bool isLandscape(BuildContext context) => screenWidth(context) > screenHeight(context);
   static bool isMobile(BuildContext context) => screenWidth(context) < 600;
   static bool isTablet(BuildContext context) => screenWidth(context) >= 600 && screenWidth(context) < 900;
   static bool isDesktop(BuildContext context) => screenWidth(context) >= 900;
@@ -47,6 +48,16 @@ class ResponsiveHelper {
   // ukuran responsif untuk gambar koin
   static double coinSize(BuildContext context) {
     final width = screenWidth(context);
+    final height = screenHeight(context);
+    final isLandscapeMode = isLandscape(context);
+    
+    if (isLandscapeMode) {
+      // di landscape, gunakan tinggi sebagai acuan
+      if (height < 400) return 150.0;
+      if (height < 500) return 180.0;
+      return 200.0;
+    }
+    
     if (width < 360) return 200.0;
     if (width < 600) return 280.0;
     return 320.0;
@@ -55,6 +66,15 @@ class ResponsiveHelper {
   // ukuran responsif untuk preview kamera
   static double cameraSize(BuildContext context) {
     final width = screenWidth(context);
+    final height = screenHeight(context);
+    final isLandscapeMode = isLandscape(context);
+    
+    if (isLandscapeMode) {
+      // di landscape, lebih kecil
+      final smaller = height < width ? height : width;
+      return smaller * 0.5;
+    }
+    
     if (width < 360) return 260.0;
     if (width < 600) return 300.0;
     return 340.0;
@@ -63,6 +83,15 @@ class ResponsiveHelper {
   // ukuran font responsif untuk judul
   static double titleSize(BuildContext context) {
     final width = screenWidth(context);
+    final isLandscapeMode = isLandscape(context);
+    
+    if (isLandscapeMode) {
+      // di landscape, lebih kecil
+      if (width < 600) return 32.0;
+      if (width < 900) return 40.0;
+      return 48.0;
+    }
+    
     if (width < 360) return 42.0;
     if (width < 600) return 56.0;
     return 64.0;

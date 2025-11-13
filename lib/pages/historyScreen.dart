@@ -109,6 +109,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildList() {
     final scans = HistoryService.scans.reversed.toList();
+    final isLandscape = ResponsiveHelper.isLandscape(context);
     
     if (scans.isEmpty) {
       return Center(
@@ -139,6 +140,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
           ],
         ),
+      );
+    }
+
+    // Gunakan GridView untuk landscape, ListView untuk portrait
+    if (isLandscape) {
+      return GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 2.5,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: scans.length,
+        itemBuilder: (context, index) {
+          final scan = scans[index];
+          return _buildCard(scan, index);
+        },
       );
     }
 
