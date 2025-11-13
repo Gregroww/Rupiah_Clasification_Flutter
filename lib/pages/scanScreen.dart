@@ -86,8 +86,8 @@ class _ScanScreenState extends State<ScanScreen> {
   Future<File?> _saveImage(String sourcePath, String prefix) async {
     try {
       if (kIsWeb) {
-        // di web, langsung gunakan file (sudah bisa diakses)
-        return File(sourcePath);
+        // di web, tidak perlu save, gunakan langsung XFile
+        return null; // akan di-handle di _processImage
       }
       
       // di mobile, salin ke direktori dokumen aplikasi
@@ -101,20 +101,30 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  Future<void> _processImage(File imageFile) async {
+  Future<void> _processImage(File? imageFile, XFile? xFile) async {
     setState(() => _isProcessing = true);
     
     try {
       // Kirim gambar ke API menggunakan PredictionProvider
       final provider = Provider.of<PredictionProvider>(context, listen: false);
-      final result = await provider.predictFile(imageFile);
+      
+      // Gunakan XFile untuk web, File untuk mobile
+      Map<String, dynamic> result;
+      if (kIsWeb && xFile != null) {
+        result = await provider.predictXFile(xFile);
+      } else if (imageFile != null) {
+        result = await provider.predictFile(imageFile);
+      } else {
+        throw Exception('No image file available');
+      }
       
       if (mounted) {
         setState(() => _isProcessing = false);
         
         if (result['success']) {
           // tambahkan ke riwayat dengan data prediksi
-          HistoryService.addScan(imageFile.path, result['data']);
+          final imagePath = imageFile?.path ?? xFile?.path ?? '';
+          HistoryService.addScan(imagePath, result['data']);
           
           // kembali ke home dengan hasil
           if (mounted) {
@@ -142,10 +152,16 @@ class _ScanScreenState extends State<ScanScreen> {
     if (_controller == null || !_controller!.value.isInitialized) return;
     try {
       final XFile file = await _controller!.takePicture();
-      final saved = await _saveImage(file.path, 'captured');
       
-      if (saved != null) {
-        await _processImage(saved);
+      if (kIsWeb) {
+        // Di web, langsung gunakan XFile
+        await _processImage(null, file);
+      } else {
+        // Di mobile, save dulu
+        final saved = await _saveImage(file.path, 'captured');
+        if (saved != null) {
+          await _processImage(saved, null);
+        }
       }
     } catch (e) {
       debugPrint('error: $e');
@@ -160,10 +176,15 @@ class _ScanScreenState extends State<ScanScreen> {
         imageQuality: 80,
       );
       if (picked != null) {
-        final saved = await _saveImage(picked.path, 'picked');
-        
-        if (saved != null) {
-          await _processImage(saved);
+        if (kIsWeb) {
+          // Di web, langsung gunakan XFile
+          await _processImage(null, picked);
+        } else {
+          // Di mobile, save dulu
+          final saved = await _saveImage(picked.path, 'picked');
+          if (saved != null) {
+            await _processImage(saved, null);
+          }
         }
       }
     } catch (e) {

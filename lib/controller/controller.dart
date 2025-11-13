@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class PredictionProvider with ChangeNotifier {
   File? imageFile;
+  XFile? imageXFile; // untuk web support
   String? predictionMessage;
   final ImagePicker _picker = ImagePicker();
   
@@ -17,24 +19,64 @@ class PredictionProvider with ChangeNotifier {
   Future<void> pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
-      imageFile = File(pickedFile.path);
+      imageXFile = pickedFile;
+      if (!kIsWeb) {
+        imageFile = File(pickedFile.path);
+      }
       notifyListeners();
     }
   }
 
   // Fungsi untuk mengirim gambar ke API dan mendapatkan prediksi
   Future<void> predictImage() async {
-    if (imageFile == null) return;
-    await predictFile(imageFile!);
+    if (imageFile == null && imageXFile == null) return;
+    if (kIsWeb) {
+      await predictXFile(imageXFile!);
+    } else {
+      await predictFile(imageFile!);
+    }
   }
 
-  // Fungsi untuk prediksi dari file gambar (untuk digunakan scanScreen)
+  // Fungsi untuk prediksi dari XFile (untuk web dan mobile)
+  Future<Map<String, dynamic>> predictXFile(XFile file) async {
+    final url = Uri.parse('$apiBaseUrl/api/predict-image');
+    final request = http.MultipartRequest('POST', url);
+    
+    // Baca bytes dari XFile
+    final bytes = await file.readAsBytes();
+    request.files.add(http.MultipartFile.fromBytes(
+      'image',
+      bytes,
+      filename: file.name,
+    ));
+
+    return await _sendRequest(request);
+  }
+
+  // Fungsi untuk prediksi dari file gambar (untuk mobile)
   // Return format: {'success': bool, 'data': {...}} atau {'success': false, 'error': string}
   Future<Map<String, dynamic>> predictFile(File file) async {
     final url = Uri.parse('$apiBaseUrl/api/predict-image');
-    final request = http.MultipartRequest('POST', url)
-      ..files.add(await http.MultipartFile.fromPath('image', file.path));
+    final request = http.MultipartRequest('POST', url);
+    
+    if (kIsWeb) {
+      // Jika platform web, gunakan bytes
+      final bytes = await file.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        bytes,
+        filename: 'image.jpg',
+      ));
+    } else {
+      // Jika platform mobile, gunakan path
+      request.files.add(await http.MultipartFile.fromPath('image', file.path));
+    }
 
+    return await _sendRequest(request);
+  }
+
+  // Fungsi helper untuk mengirim request dan handle response
+  Future<Map<String, dynamic>> _sendRequest(http.MultipartRequest request) async {
     try {
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
@@ -115,6 +157,7 @@ class PredictionProvider with ChangeNotifier {
   // Fungsi untuk menghapus gambar dan prediksi
   void clear() {
     imageFile = null;
+    imageXFile = null;
     predictionMessage = null;
     notifyListeners();
   }
