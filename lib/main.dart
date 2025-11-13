@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Bingung nama app aokwoakwo',
+      title: 'Rupiah Scanner',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A)),
         useMaterial3: true,
@@ -23,15 +23,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// class HomePage extends StatelessWidget {
-//   const HomePage({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Beranda')),
-//       body: const Center(child: Text('Ini halaman utama.')),
-//     );
-//   }
-// }
