@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'startupScreen.dart';
-import 'getStartupScreen.dart';
+import 'pages/startupScreen.dart';
+import 'pages/getStartupScreen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
