@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'controller/controller.dart';
 import 'pages/startupScreen.dart';
 import 'pages/getStartupScreen.dart';
 
@@ -12,14 +14,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Rupiah Scanner',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A)),
-        useMaterial3: true,
+    return ChangeNotifierProvider(
+      create: (context) => PredictionProvider(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Rupiah Scanner',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16A34A)),
+          useMaterial3: true,
+        ),
+        home: const StartupScreen(nextPage: GetStartedScreen()),
       ),
-       home: const StartupScreen(nextPage: GetStartedScreen()),
     );
   }
 }

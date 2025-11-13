@@ -7,9 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import '../services/history_service.dart';
-import '../services/api_service.dart';
+import '../controller/controller.dart';
 import '../theme/app_theme.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -104,8 +105,9 @@ class _ScanScreenState extends State<ScanScreen> {
     setState(() => _isProcessing = true);
     
     try {
-      // kirim ke api ai untuk prediksi (menggunakan mock untuk saat ini)
-      final result = await ApiService.mockPrediction();
+      // Kirim gambar ke API menggunakan PredictionProvider
+      final provider = Provider.of<PredictionProvider>(context, listen: false);
+      final result = await provider.predictFile(imageFile);
       
       if (mounted) {
         setState(() => _isProcessing = false);
