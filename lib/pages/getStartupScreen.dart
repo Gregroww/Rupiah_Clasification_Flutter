@@ -8,7 +8,7 @@ class GetStartedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: double.infinity,
+        width: double.infinity,//lebar penuh layar
         decoration: BoxDecoration(
           //background gradient layar
           gradient: LinearGradient(
@@ -20,12 +20,12 @@ class GetStartedScreen extends StatelessWidget {
             ],
           ),
         ),
-        child: SafeArea(
+        child: SafeArea(//konten aman tidak tertutup notch/status bar
           child: Column(
             children: [
               //header kiri-atas: ikon + judul aplikasi
               Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),//jarak 20px semua sisi
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Row(

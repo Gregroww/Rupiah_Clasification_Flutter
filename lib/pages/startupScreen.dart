@@ -11,12 +11,12 @@ class StartupScreen extends StatefulWidget {
 }
 
 class _StartupScreenState extends State<StartupScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin { //mixin agar bisa menggunakan AnimationController(vsync),menciptakan gerakan mulus
   late final AnimationController _controller; //controller untuk kontrol durasi Lottie
 
   @override
-  void initState() {
-    super.initState();
+  void initState() { //dipanggil saat widget diinisialisasi(sekali aja)
+    super.initState(); //panggil initState superclass
     _controller = AnimationController(vsync: this); //inisialisasi controller
 
     //jika animasi selesai, langsung navigasi ke halaman berikutnya
@@ -30,7 +30,7 @@ class _StartupScreenState extends State<StartupScreen>
   //navigasi dengan efek fade ke halaman tujuan
   void _goToNext() {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(_fadeRoute(widget.nextPage));
+    Navigator.of(context).pushReplacement(_fadeRoute(widget.nextPage));//navigasi menggantikan halaman saat ini
   }
 
   @override
@@ -39,7 +39,7 @@ class _StartupScreenState extends State<StartupScreen>
     super.dispose();
   }
 
-  //transition route fade halus
+  //transisi route fade halus
   PageRouteBuilder _fadeRoute(Widget page) {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 500),
@@ -49,17 +49,17 @@ class _StartupScreenState extends State<StartupScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { //tampilan ui
     //hitung ukuran layar untuk responsivitas
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.sizeOf(context);//layar saat ini
     final shortest = size.shortestSide;
     final isTablet = shortest >= 600;
 
     //batas ukuran Lottie agar proporsional di HP/tablet
-    final animWidth = isTablet ? size.width * 0.5 : size.width * 0.8;
-    final animHeight = isTablet ? size.height * 0.5 : size.height * 0.45;
+    final animWidth = isTablet ? size.width * 0.5 : size.width * 0.8;//80% layar di HP, 50% di tablet
+    final animHeight = isTablet ? size.height * 0.5 : size.height * 0.45;//45% layar di HP, 50% di tablet
 
-    return Scaffold(
+    return Scaffold(//kerangka dasar halaman
       body: Container(
         //gradient background gelap
         decoration: const BoxDecoration(
@@ -81,11 +81,11 @@ class _StartupScreenState extends State<StartupScreen>
                   child: Lottie.asset(
                     'assets/Lottie/Money.json',
                     controller: _controller, //dikendalikan oleh AnimationController
-                    onLoaded: (composition) {
+                    onLoaded: (composition) {//callback saat file Lottie dimuat
                       //set durasi animasi sesuai file Lottie lalu jalankan
                       _controller
                         ..duration = composition.duration
-                        ..forward();
+                        ..forward();//mulai animasi
                     },
                     frameRate: FrameRate.max,
                     repeat: false, //animasi diputar sekali saja
@@ -95,7 +95,7 @@ class _StartupScreenState extends State<StartupScreen>
               ),
 
               //judul/tagline di bawah animasi
-              Positioned(
+              Positioned(//posisi aboslut di bawah
                 bottom: 60,
                 left: 24,
                 right: 24,
