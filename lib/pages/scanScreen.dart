@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'package:camera/camera.dart';
+import 'package:camerax/camerax.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +21,6 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   CameraController? _controller;
-  List<CameraDescription> _cameras = [];
   bool _isInitializing = true;
   bool _isProcessing = false;
   final ImagePicker _picker = ImagePicker();
@@ -43,15 +41,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final cameraStatus = await Permission.camera.request();
       
       if (cameraStatus.isGranted) {
-        // dapatkan daftar kamera yang tersedia
-        _cameras = await availableCameras();
-        
-        if (_cameras.isNotEmpty) {
-          await _initCamera();
-        } else {
-          debugPrint('No cameras available');
-          setState(() => _isInitializing = false);
-        }
+        await _initCamera();
       } else {
         debugPrint('Camera permission denied');
         setState(() => _isInitializing = false);
@@ -64,13 +54,8 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> _initCamera() async {
     try {
-      _controller = CameraController(
-        _cameras.first,
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
-      
-      await _controller!.initialize();
+      _controller = CameraController();
+      await _controller!.bind();
       
       if (mounted) {
         setState(() => _isInitializing = false);
@@ -83,24 +68,6 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  Future<File?> _saveImage(String sourcePath, String prefix) async {
-    try {
-      if (kIsWeb) {
-        // di web, tidak perlu save, gunakan langsung XFile
-        return null; // akan di-handle di _processImage
-      }
-      
-      // di mobile, salin ke direktori dokumen aplikasi
-      final appDir = await getApplicationDocumentsDirectory();
-      final fileName = path.basename(sourcePath);
-      final savedPath = path.join(appDir.path, '${prefix}_$fileName');
-      return await File(sourcePath).copy(savedPath);
-    } catch (e) {
-      debugPrint('Save image error: $e');
-      return null;
-    }
-  }
-
   Future<void> _processImage(File? imageFile, XFile? xFile) async {
     setState(() => _isProcessing = true);
     
@@ -108,12 +75,10 @@ class _ScanScreenState extends State<ScanScreen> {
       // Kirim gambar ke API menggunakan PredictionProvider
       final provider = Provider.of<PredictionProvider>(context, listen: false);
       
-      // Gunakan XFile untuk web, File untuk mobile
+      // Gunakan XFile untuk semua platform
       Map<String, dynamic> result;
-      if (kIsWeb && xFile != null) {
+      if (xFile != null) {
         result = await provider.predictXFile(xFile);
-      } else if (imageFile != null) {
-        result = await provider.predictFile(imageFile);
       } else {
         throw Exception('No image file available');
       }
@@ -123,7 +88,7 @@ class _ScanScreenState extends State<ScanScreen> {
         
         if (result['success']) {
           // tambahkan ke riwayat dengan data prediksi
-          final imagePath = imageFile?.path ?? xFile?.path ?? '';
+          final imagePath = xFile.path;
           HistoryService.addScan(imagePath, result['data']);
           
           // kembali ke home dengan hasil
@@ -149,20 +114,41 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _takePicture() async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (_controller == null) return;
     try {
-      final XFile file = await _controller!.takePicture();
-      
-      if (kIsWeb) {
-        // Di web, langsung gunakan XFile
-        await _processImage(null, file);
-      } else {
-        // Di mobile, save dulu
-        final saved = await _saveImage(file.path, 'captured');
-        if (saved != null) {
-          await _processImage(saved, null);
-        }
-      }
+      // CameraX takePicture menggunakan callback
+      final callback = ImageCaptureOnImageCapturedCallback(
+        onCaptureSuccess: (imageProxy) async {
+          try {
+            // Save ImageProxy to temporary file
+            final tempDir = await getTemporaryDirectory();
+            final tempPath = '${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            final file = File(tempPath);
+            
+            // Get image data from the first plane
+            final planes = imageProxy.planes;
+            if (planes.isNotEmpty) {
+              final plane = planes.first;
+              final imageBytes = plane.value;  // Uint8List
+              await file.writeAsBytes(imageBytes);
+            }
+            
+            await imageProxy.close();
+            
+            // Process the saved image
+            final xFile = XFile(file.path);
+            await _processImage(null, xFile);
+          } catch (e) {
+            debugPrint('error converting image: $e');
+            _showError('Failed to process captured image');
+          }
+        },
+        onError: (exception) {
+          debugPrint('capture error: $exception');
+          _showError('Failed to capture image');
+        },
+      );
+      await _controller!.takePicture(callback);
     } catch (e) {
       debugPrint('error: $e');
       _showError('Failed to capture image');
@@ -176,16 +162,8 @@ class _ScanScreenState extends State<ScanScreen> {
         imageQuality: 80,
       );
       if (picked != null) {
-        if (kIsWeb) {
-          // Di web, langsung gunakan XFile
-          await _processImage(null, picked);
-        } else {
-          // Di mobile, save dulu
-          final saved = await _saveImage(picked.path, 'picked');
-          if (saved != null) {
-            await _processImage(saved, null);
-          }
-        }
+        // XFile 
+        await _processImage(null, picked);
       }
     } catch (e) {
       debugPrint('error: $e');
@@ -195,7 +173,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller?.unbind();
     super.dispose();
   }
 
@@ -388,15 +366,8 @@ class _ScanScreenState extends State<ScanScreen> {
                       valueColor: AlwaysStoppedAnimation(AppColors.accent),
                     ),
                   )
-                : (_controller != null && _controller!.value.isInitialized)
-                    ? FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _controller!.value.previewSize!.height,
-                          height: _controller!.value.previewSize!.width,
-                          child: CameraPreview(_controller!),
-                        ),
-                      )
+                : _controller != null
+                    ? PreviewWidget(controller: _controller!)
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
